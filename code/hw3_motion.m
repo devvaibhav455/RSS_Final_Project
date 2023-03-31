@@ -38,6 +38,14 @@ function [samples, adjacency] = ex2_motion(questionNum, samples, adjacency)
     robot.plot(q_start);
     hold on;	
     draw_sphere(sphere_center,sphere_radius);
+
+%     sampling_strategy = 'uniform';
+%     sampling_strategy = 'gaussian';
+    sampling_strategy = 'bridge';
+
+%     algo_path = '';
+
+%     algo_smoothing = '';
     
 
     % ========== Question M0 ==========
@@ -65,7 +73,7 @@ function [samples, adjacency] = ex2_motion(questionNum, samples, adjacency)
         num_samples = 100;
         % Draw random samples from configuration space, within joint limits
         % TODO: Implement this function
-        random_qs = M1(q_min, q_max, num_samples);
+        random_qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radius, sphere_center, sphere_radius);
         num_in_bounds = 0;
         num_collision = 0;
         for i = 1:num_samples
