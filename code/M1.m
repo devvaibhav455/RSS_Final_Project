@@ -65,12 +65,10 @@ function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radiu
             is_q_colliding  = check_collision(robot, q, link_radius, sphere_centers, sphere_radii); 
             is_q_dash_colliding  = check_collision(robot, q_dash, link_radius, sphere_centers, sphere_radii); 
 
-            if (is_q_colliding && is_q_dash_colliding) == false
-%                 if is_q1_colliding == false
-%                     q_picked = q;
-                if is_q_dash_colliding == false
-                    q = q_dash;
-                end
+            if (is_q_colliding == true && is_q_dash_colliding == false)
+                q = q_dash;
+            elseif (is_q_colliding == false && is_q_dash_colliding == false)
+                continue
             end
 
         elseif strcmp(sampling_strategy, 'bridge')
@@ -81,6 +79,8 @@ function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radiu
 
             if ((is_q_colliding && is_q_dash_colliding) == true) && (is_q_ddash_colliding == false)
                     q = q_ddash;
+            else
+                continue
             end
         end
 

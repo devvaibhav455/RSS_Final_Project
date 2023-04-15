@@ -10,11 +10,22 @@
 %                         in collision with the given spherical obstacles
 
 function in_collision = check_collision(robot, q, link_radius, sphere_centers, sphere_radii, resolution)
-    x1 = [0 0 0]'; %Origin's co-ordinate
-    T2 = robot.A(1,q) * robot.A(2,q) * robot.A(3,q); %Calculating some transformation matrix
+    x1 = [0 0 0]'; %Origin's co-ordinate. Present at the blue link start
+    T2 = robot.A(1,q) * robot.A(2,q) * robot.A(3,q); %Calculating some transformation matrix. Line #573 in SerialLink.m | A(r, joints, q)
+    % For example, the link transform for joint 4 is
+    %          robot.A(4, q4)
+%     T1 = robot.A(1,q)
+%     T2_test = robot.A(2,q)
+%     T3_test = robot.A(3,q)
+%     T4_test = robot.A(4,q)
+%     x2_s = T1.t;
+
     x2 = T2.t; % Blue link's end coordinates .tgives the translation component from the homogenous transformation matrix
     T3 = T2 * robot.A(4,q);
     x3 = T3.t; %End-effector tip co-ordinates
+
+    % Add condition to check collision from blue link start to blue link
+    % end instead of world start (x1) to x2(blue link end)
      
     if nargin < 6
         resolution = 11;

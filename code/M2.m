@@ -20,7 +20,7 @@
 %                      undirected graph, the adjacency matrix should be
 %                      symmetric: adjacency(i,j) == adjacency(j,i)
 
-function [samples, adjacency] = M2(robot, q_min, q_max, num_samples, num_neighbors, link_radius, sphere_centers, sphere_radii)
+function [samples, adjacency] = M2(robot, q_min, q_max, num_samples, sampling_strategy, num_neighbors, link_radius, sphere_centers, sphere_radii)
   
     adjacency = zeros(num_samples, num_samples);
     
@@ -36,11 +36,13 @@ function [samples, adjacency] = M2(robot, q_min, q_max, num_samples, num_neighbo
         rng shuffle;
         %Check if this random index is already picked or not/ pick a unique
         %sample each time
-        q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
-        q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
-        q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
-        q4 = q_min(4) + (q_max(4) - q_min(4))*rand();
-        q = [q1 q2 q3 q4];
+        q = M1(q_min, q_max, 1, sampling_strategy, robot, link_radius, sphere_centers, sphere_radii);
+
+%         q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
+%         q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
+%         q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
+%         q4 = q_min(4) + (q_max(4) - q_min(4))*rand();
+%         q = [q1 q2 q3 q4];
 
         % Check if sampled configuration is in collision (will enter
         % loop when condition becomes true. i.e. (true (does not collide) && true (does not belong)

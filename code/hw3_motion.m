@@ -9,15 +9,13 @@
 %                               it and pass it in on later calls to
 %                               hw2_motion to avoid re-computing it
 
-function [samples, adjacency] = ex2_motion(questionNum, samples, adjacency)
+% load samples_adjacency_matrix.mat
+
+function [samples, adjacency] = ex2_motion(samples, adjacency)
     clc;
     close all;
 %     startup_rvc;
     
-    if nargin < 1
-        error('Error: Please enter a question number as a parameter');
-    end
-
     % Create robot
 	robot = create_robot();
 
@@ -34,167 +32,120 @@ function [samples, adjacency] = ex2_motion(questionNum, samples, adjacency)
     sphere_center = [0.5 0 0]; % 1x3
     sphere_radius = 0.25;
 
+    r = 0.25;
+    sphere_centers = [sphere_center; 0 0.9 0; 0 -0.9 0];
+    sphere_radii = [sphere_radius; r; r];
+%     draw_sphere(sphere_centers(3,:)', sphere_radii(3));
+    for i = 1:size(sphere_centers, 1)
+        draw_sphere(sphere_centers(i,:)', sphere_radii(i));
+        hold on;
+    end
+
+
     % Plot robot and obstacle
     robot.plot(q_start);
     hold on;	
-    draw_sphere(sphere_center,sphere_radius);
+%     draw_sphere(sphere_center,sphere_radius);
 
-%     sampling_strategy = 'uniform';
+    sampling_strategy = 'uniform';
 %     sampling_strategy = 'gaussian';
-    sampling_strategy = 'bridge';
+%     sampling_strategy = 'bridge';
 
-%     algo_path = '';
+    algo_path = 'prm';
+%     algo_path = 'rrt';
 
-%     algo_smoothing = '';
+    smooth_path = 1; % 1 : shorten and smooth path using interpolation | 0 don't do path smoothing
+    algo_smoothing = 'poly';
+%     algo_smoothing = 'spline';
     
+    if strcmp(algo_path, 'dijkstra')
 
-    % ========== Question M0 ==========
-    if questionNum == 0
-        % Plot the robot in a given configuration
-        q = M0();
-        robot.plot(q);
-        % Check if configuration is within joint limits / in collision
-        in_bounds = (all(q >= q_min) && all(q <= q_max));
-        in_collision = check_collision(robot, q, link_radius, sphere_center, sphere_radius);
-        if in_bounds
-            disp('Robot configuration is within joint limits.');
-        else
-            disp('Robot configuration is not within joint limits.');
-        end
-        if in_collision
-            disp('Robot configuration is in collision.');
-        else
-            disp('Robot configuration is not in collision.');
-        end
-    end
-    
-    % ========== Question M1 ==========
-    if questionNum == 1
-        num_samples = 100;
-        % Draw random samples from configuration space, within joint limits
-        % TODO: Implement this function
-        random_qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radius, sphere_center, sphere_radius);
-        num_in_bounds = 0;
-        num_collision = 0;
-        for i = 1:num_samples
-            q = random_qs(i,:);
-            robot.plot(q);
-            % Check if sampled configuration is within bounds
-            % Note: All samples should be within bounds
-            if all(q >= q_min) && all(q <= q_max)
-                num_in_bounds = num_in_bounds + 1;
-            end
-            % Check if sampled configuration is in collision
-            % Note: Samples can be in collision
-            if check_collision(robot, q, link_radius, sphere_center, sphere_radius)
-                num_collision = num_collision + 1;
-            end
-        end
-        fprintf('Number of samples: %d\n', num_samples);
-        fprintf('Number within bounds: %d\n', num_in_bounds);
-        fprintf('Number in collision: %d\n', num_collision);
     end
 
-    % ========== Question M2 ==========
-    if questionNum == 2
+    if strcmp(algo_path, 'prm')
         % Parameters for PRM
         num_samples = 100;
         num_neighbors = 10;
         % Construct the roadmap, consisting of
         % configuration samples and weighted adjacency matrix
         % TODO: Implement this function
-        [samples, adjacency] = M2(robot, q_min, q_max, num_samples, num_neighbors, link_radius, sphere_center, sphere_radius);
+        if nargin < 2
+            fprintf('Calculating adjacency matrix on runtime\n')
+            [samples, adjacency] = M2(robot, q_min, q_max, num_samples, sampling_strategy, num_neighbors, link_radius, sphere_center, sphere_radius);
+        end
+        
 %         save("samples_adjacency_matrix.mat", "samples", "adjacency");
         figure;
         % Visualize weighted adjacency matrix
         imshow(adjacency, [min(min(adjacency)), max(max(adjacency))]);
-    end
-    
-    % ========== Question M3 ==========
-    if questionNum == 3
-        % Parameters for PRM
-        num_samples = 100;
-        num_neighbors = 5;
-        % If pre-computed roadmap is not provided,
-        % compute the roadmap using M2
-        if nargin < 3
-            [samples, adjacency] = M2(robot, q_min, q_max, num_samples, num_neighbors, link_radius, sphere_center, sphere_radius);
-        end
+
         % Use the roadmap to find a path from q_start to q_goal
         % TODO: Implement this function
         [path, path_found] = M3(robot, samples, adjacency, q_start, q_goal, link_radius, sphere_center, sphere_radius);
-        % Visualize the trajectory, if one is found
-        if path_found
-            fprintf('Path found with %d intermediate waypoints:\n', size(path, 1) - 2);
-            disp(path);
-            robot.plot(interpolate_path(path), 'fps', 10);
-        else
-            disp('No path found.');
-        end
+        
     end
+
     
-    % ========== Question M4 ==========
-    if questionNum == 4
+
+
+    if strcmp(algo_path, 'astar')
+
+    end
+
+    if strcmp(algo_path, 'rrt')
         % Use the RRT algorithm to find a path from q_start to q_goal
         % TODO: Implement this function
-        [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_center, sphere_radius);
-        % Visualize the trajectory, if one is found
-        if path_found
-            fprintf('Path found with %d intermediate waypoints:\n', size(path, 1) - 2);
-            disp(path);
-            robot.plot(interpolate_path(path), 'fps', 10);
-        else
-            disp('No path found.');
-        end
+        [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_center, sphere_radius, sampling_strategy);        
     end
-    
-    % ========== Question M5 ==========
-    if questionNum == 5
-        % Use the RRT algorithm to find a path from q_start to q_goal
-        [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_center, sphere_radius);
-        if path_found
-            fprintf('Path found with %d intermediate waypoints:\n', size(path, 1) - 2);
-            disp(path);
-            % If trajectory is found, smooth the trajectory
-            % TODO: Implement this function
-            smoothed_path = M5(robot, path, link_radius, sphere_center, sphere_radius);
-            % Visualize the smoothed trajectory
-            fprintf('Smoothed path found with %d intermediate waypoints:\n', size(smoothed_path, 1) - 2);
-            disp(smoothed_path);
-            robot.plot(interpolate_path(smoothed_path), 'fps', 10);
-        else
-            disp('No path found.');
-        end
+
+    if strcmp(algo_path, 'rrtstar')
+
     end
-    
-    % ========== Question M6 ==========
-    if questionNum == 6
-        % Set up a more challenging motion planning problem
-        % If M4 (RRT) and M5 (smoothing) are implemented correctly,
-        % this should find a trajectory without any issues
-        r = 0.38;
-        % Create more spherical obstacles
-        sphere_centers = [sphere_center; 0 0.5 0; 0 -0.5 0];
-        sphere_radii = [sphere_radius; r; r];
-        for i = 2:size(sphere_centers, 1)
-            draw_sphere(sphere_centers(i,:)', sphere_radii(i));
-        end
-        % Use the RRT algorithm to find a path from q_start to q_goal
-        [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_centers, sphere_radii);
-        if path_found
-            fprintf('Path found with %d intermediate waypoints:\n', size(path, 1) - 2);
-            disp(path);
-            % If trajectory is found, smooth the trajectory
-            smoothed_path = M5(robot, path, link_radius, sphere_centers, sphere_radii);
-            % Visualize the smoothed trajectory
-            fprintf('Smoothed path found with %d intermediate waypoints:\n', size(smoothed_path, 1) - 2);
-            disp(smoothed_path);
-            robot.plot(interpolate_path(smoothed_path), 'fps', 10);
-        else
-            disp('No path found.');
-        end
+
+    if path_found
+        fprintf('%s Path found with %d intermediate waypoints:\n', algo_path , size(path, 1) - 2);
+        disp(path);
+    else
+        disp('No path found.');
+    end
+
+    % ========== Shorten the path by removing unnecessary waypoints ==========
+    if path_found ==1
+        % If trajectory is found, shorten the trajectory
+        % TODO: Implement this function
+        shortened_path = M5(robot, path, link_radius, sphere_center, sphere_radius);
+        % Visualize the smoothed trajectory
+        fprintf('Shortened path found with %d intermediate waypoints:\n',size(shortened_path, 1) - 2);
+        disp(shortened_path);
+%         robot.plot(shortened_path, 'fps', 10);
+        %         robot.plot(interpolate_path(smoothed_path), 'fps', 10);
+    end
+
+    % ========== Smoothen the path depending on algo_smoothing  ==========
+    if smooth_path == 1 && path_found ==1
+        % If trajectory is found, smoothen the trajectory
+        smoothed_path = Smooth_path(shortened_path, algo_smoothing);
+        % Visualize the smoothed trajectory
+        fprintf('%s Smoothed path found with %d intermediate waypoints:\n', algo_smoothing ,size(smoothed_path, 1) - 2);
+        disp(smoothed_path);
+        robot.plot(smoothed_path, 'fps', 10);
     end
 end
+   
+
+% ========== Detect the number of collisions on the smoothed path  ==========   
+%Check if the edge between jth neighbor and current sample (ith) is collision free or not
+function num_collisions = count_collisions(path)
+    
+    for i = 1:size(path,1)
+        if ~(check_edge(robot, samples(i,:), samples(sorted_dist_indexes(j)), link_radius, sphere_centers, sphere_radii, 30))
+
+        end
+    end
+    
+
+end
+   
 
 % ========== Helper functions ==========
 

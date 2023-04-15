@@ -14,7 +14,7 @@
 %                 should be q_start, the final row should be q_goal.
 %         path_found -> Boolean denoting whether a path was found
 
-function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_centers, sphere_radii)
+function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_centers, sphere_radii,sampling_strategy)
     % Build a tree from q_start to q_goal.
     
     % Number of nodes in the tree
@@ -45,7 +45,7 @@ function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radi
         if rand() < beta
             q_target = q_goal;
         else
-            q_target = M1(q_min, q_max, 1);
+            q_target = M1(q_min, q_max, 1, sampling_strategy, robot, link_radius, sphere_centers, sphere_radii);
         end
 
         % Find the closest node in the tree to the target configuration
