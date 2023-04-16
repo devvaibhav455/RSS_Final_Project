@@ -143,4 +143,10 @@ function smoothed_path = M5(path, algo_smoothing)
     
     end
 
+    if strcmp(algo_smoothing, 'pchip')    
+        t = 1:size(path, 1);
+        ti = 1:0.2:size(path, 1); % Interpolate at 0.1 intervals we can tweak this for smoother and smoother path
+        smoothed_path = interp1(t, path, ti, 'pchip');
+    end
+
 

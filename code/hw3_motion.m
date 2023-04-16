@@ -55,14 +55,15 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
 
 %     algo_path = 'prm';
 %     algo_path = 'rrt';
-%     algo_path = 'dijkstra';
-    algo_path = 'rrtstar';
+    algo_path = 'dijkstra';
+%     algo_path = 'rrtstar';
 
     smooth_path = 1; % 1 : shorten and smooth path using interpolation | 0 don't do path smoothing
-%     algo_smoothing = 'poly';
+    algo_smoothing = 'poly';
 %     algo_smoothing = 'spline';
 %     algo_smoothing = 'bezier';
-    algo_smoothing = 'bspline';
+%     algo_smoothing = 'bspline';
+%     algo_smoothing = 'pchip'; %Piecewise Cubic Hermite Interpolating Polynomial (PCHIP)
     
     
     path_found = 0;
@@ -107,9 +108,10 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
             adjacency_new(i,i) = 0;
         end 
 
-
+        tic
         [dist, path_indexes] = Dijkstra(adjacency_new, size(adjacency_new,1)-1, size(adjacency_new,1));
-        
+        fprintf('\n%s: Time elapsed: %f\n', algo_path, toc)
+
         if size(path_indexes,1) > 1
             path_found = 1;
             path = zeros(size(path_indexes,1), 4);
@@ -122,6 +124,7 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
     
     % ========== Use PRM to find path ==========
     if strcmp(algo_path, 'prm')
+        tic
         % Parameters for PRM
         num_samples = 100;
         num_neighbors = 10;
@@ -134,14 +137,14 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
         end
         
 %         save("samples_adjacency_matrix.mat", "samples", "adjacency");
-        figure;
+%         figure;
         % Visualize weighted adjacency matrix
-        imshow(adjacency, [min(min(adjacency)), max(max(adjacency))]);
+%         imshow(adjacency, [min(min(adjacency)), max(max(adjacency))]);
 
         % Use the roadmap to find a path from q_start to q_goal
         % TODO: Implement this function
         [path, path_found] = M3(robot, samples, adjacency, q_start, q_goal, link_radius, sphere_center, sphere_radius);
-        
+        fprintf('\n%s: Time elapsed: %f\n', algo_path, toc)
     end
 
     
@@ -155,12 +158,16 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
     if strcmp(algo_path, 'rrt')
         % Use the RRT algorithm to find a path from q_start to q_goal
         % TODO: Implement this function
+        tic
         [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_center, sphere_radius, sampling_strategy);        
+        fprintf('\n%s: Time elapsed: %f\n', algo_path, toc)
     end
 
     % ========== Use RRT* to find path ==========
     if strcmp(algo_path, 'rrtstar')
+        tic
         [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_center, sphere_radius, sampling_strategy);        
+        fprintf('\n%s: Time elapsed: %f\n', algo_path, toc)
     end
 
     % ========== Display the number of points in the path by the path finding algorithm ==========
@@ -174,7 +181,9 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
     % ========== Shorten the path by removing unnecessary waypoints ==========
     if path_found ==1
         % If trajectory is found, shorten the trajectory
+        tic
         shortened_path = M5(robot, path, link_radius, sphere_center, sphere_radius);
+        fprintf('\nPath Shortening: Time elapsed: %f\n', toc)
         fprintf('Shortened path found with %d intermediate waypoints:\n',size(shortened_path, 1) - 2);
         disp(shortened_path);
     end
@@ -182,13 +191,45 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
     % ========== Smoothen the path depending on algo_smoothing  ==========
     if smooth_path == 1 && path_found ==1
         % If trajectory is found, smoothen the trajectory
+        tic
         smoothed_path = Smooth_path(shortened_path, algo_smoothing);
+        fprintf('\n%s: Path Smoothening Time elapsed: %f\n', algo_smoothing, toc)
         % Visualize the smoothed trajectory
         fprintf('%s Smoothed path found with %d intermediate waypoints:\n', algo_smoothing ,size(smoothed_path, 1) - 2);
         disp(smoothed_path);
         fprintf('%s Smoothed: Number in collision: %d\n',algo_smoothing, count_collisions(smoothed_path, robot, link_radius, sphere_centers, sphere_radii, resolution));
+        figure(1) %Src: https://www.mathworks.com/matlabcentral/answers/12640-plot-on-different-figures-during-a-loop
         robot.plot(smoothed_path, 'fps', 10);
     end
+
+    % ========== Plot the original path and the smoothed path  ==========
+    if smooth_path == 1 && path_found ==1 
+        figure(4);
+        plot3(path(:,1),path(:,2),path(:,4),"o-")
+        grid on
+        xlabel('q1')
+        ylabel('q2')
+        zlabel('q4')
+        xlim([-3*pi/2 3*pi/2])
+        ylim([-1.5*pi 0.1])
+        zlim([-1.5*pi 0.1])
+
+        txt_start = '\leftarrow START';
+        txt_goal = '\leftarrow GOAL';
+        text(q_start(1),q_start(2),q_start(4),txt_start)
+        text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
+        
+        hold on
+        plot3(shortened_path(:,1),shortened_path(:,2),shortened_path(:,4),"x-")
+        hold on
+        plot3(smoothed_path(:,1),smoothed_path(:,2),smoothed_path(:,4),"-.")
+        name_opath = sprintf('%s: Original Path', algo_path);
+        name_smoothed_path = sprintf('%s: Smoothed Path', algo_smoothing);
+        legend(name_opath,'Shortened path',name_smoothed_path)
+        hold off
+    end
+
+
 end
    
 
@@ -245,5 +286,6 @@ function draw_sphere(position, radius)
     X = X + position(1);
     Y = Y + position(2);
     Z = Z + position(3);
+    figure(1)
     surf(X,Y,Z);
 end

@@ -1,5 +1,5 @@
 % Input: robot -> A 4-DOF robot encoded as a SerialLink object
-%        q_min -> 1x4 vector of minimum angle for each joint
+%        x_min -> 1x4 vector of minimum angle for each joint
 %        q_max -> 1x4 vector of maximum angle for each joint
 %        q_start -> 1x4 vector denoting the start configuration
 %        q_goal -> 1x4 vector denoting the goal configuration
@@ -35,9 +35,9 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
     % Hyperparameter 1: step size/ alpha
     alpha = 0.2;
     %Hyperparameter 2: used to calculate the search radius
-    gamma = 10;
+    gamma = 100;
     % Hyperparameter 3: used to calculate the search radius
-    d = 0.3;
+    d = 3;
     %Hyperparameter 4: used to calculate the search radius
     eta = 0.1;
 
@@ -45,20 +45,16 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
     threshold = 0.3;
     
     %Hyperparameter 2: goal biasing parameter/ beta
-    beta = 0.9;
+    beta = 0.1;
     
     % Boolean variable to keep track of whether goal has been found
     goal_found = false;
     
     % Start building the tree
-    figure;
+    
     for i = 1:n
-        fprintf('\n############################# %d #########################', i)
-        if goal_found
-            % If the goal has been found, stop building the tree
-            fprintf('\n########### PATH FOUND ##############');
-            break
-        end
+%         fprintf('\n############################# %d #########################', i)
+
         
         % Select a random configuration from the free space
         if rand() < beta
@@ -93,35 +89,35 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
 %             q_new_index = q_new_index(1)
             G = addnode(G,1); % Add one node to the graph.
             
-            q_min = q_nearest;
+            x_min = q_nearest;
             % Find index of q_nearest in V
-            q_min_index = find(ismember(V,q_min,'rows')); 
-            c_min = distances(G,1,q_min_index) + vecnorm(q_new - q_nearest, 2, 2);
+            x_min_index = find(ismember(V,x_min,'rows'));
+            c_min = distances(G,1,x_min_index) + vecnorm(q_new - q_nearest, 2, 2);
             
             for j = 1:numel(Q_near)
                 q_near = V(Q_near(j),:);
                 q_near_index = find(ismember(V,q_nearest,'rows'));
                 
                 if (check_edge(robot, q_near, q_new, link_radius, sphere_centers, sphere_radii) == false) && (distances(G,1,q_near_index) + vecnorm(q_near - q_new, 2, 2) < c_min)
-                    q_min = q_near;
-                    q_min_index = find(ismember(V,q_min,'rows')) ;
+                    x_min = q_near;
+                    x_min_index = find(ismember(V,x_min,'rows')); 
                     c_min = distances(G,1,q_near_index) + vecnorm(q_near - q_new, 2, 2);
                 end
             end
             
-            G = addedge(G,q_min_index, q_new_index, vecnorm(q_min - q_new, 2, 2));
+            G = addedge(G,x_min_index, q_new_index, vecnorm(x_min - q_new, 2, 2));
 
             
             % Rewire the tree
             for j = 1:numel(Q_near)
 %                 disp('Rewiring the tree')
                 q_near = V(Q_near(j),:);
-                q_near_index = find(ismember(V,q_nearest,'rows'));
+                q_near_index = find(ismember(V,q_near,'rows'));
                 
-                distances(G,1,q_new_index)
-                vecnorm(q_new - q_near, 2, 2)
-                if (check_edge(robot, q_near, q_new, link_radius, sphere_centers, sphere_radii) == false) && (distances(G,1,q_new_index) + vecnorm(q_new - q_near, 2, 2) < c_min)
-%                     disp('Deleting the node from tree')
+%                 distances(G,1,q_new_index)
+%                 vecnorm(q_new - q_near, 2, 2)
+                if (check_edge(robot, q_near, q_new, link_radius, sphere_centers, sphere_radii) == false) && (distances(G,1,q_new_index) + vecnorm(q_new - q_near, 2, 2) < distances(G,1,q_near_index))
+                    disp('Deleting the edge from tree')
                     q_parent_index = predecessors(G,q_near_index);
                     % https://www.mathworks.com/help/matlab/ref/graph.rmedge.html
                     G = rmedge(G,q_parent_index, q_near_index);
@@ -130,7 +126,7 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
                 end
             end
 
-            norm(q_goal - q_new)
+%             norm(q_goal - q_new)
             % When the new node is close enough to the goal node,
             % check if it can reach the goal node without collision.
             if norm(q_goal - q_new) < threshold
@@ -142,13 +138,15 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
                     q_goal_index = find(ismember(V,q_goal,'rows')) ;
                     G = addnode(G,1); % Add one node to the graph.
                     G = addedge(G,q_new_index, q_goal_index, vecnorm(q_new - q_goal, 2, 2));
+                    fprintf('\n########### PATH FOUND ##############\n');
+                    break;
 %                     E = [E; q_new; q_goal];
                 end
             end
 %             V(:,1)
 %             V(:,4)
-%         figure;    
-        plot3(V(:,1),V(:,2),V(:,4))
+        figure(2);
+        plot3(V(:,1),V(:,2),V(:,4),".")
         grid on
         xlabel('q1')
         ylabel('q2')
@@ -162,17 +160,18 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
         text(q_start(1),q_start(2),q_start(4),txt_start)
         text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
         M(i) = getframe;
-        hold on
+        hold off
         end
+%     pause(5)
     end
-
-    figure;
+    
+    figure(3);
     plot(G)
-    hold on
+    hold off
 
     
     
-    if path_found == true
+    if goal_found == true
         % Index of q_start in V
         index_q_start = find(ismember(V,q_start,'rows'));
         % Index of q_goal in V
