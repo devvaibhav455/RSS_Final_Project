@@ -5,7 +5,7 @@
 %               all within joint limits
 
 function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radius, sphere_centers, sphere_radii)
-%     fprintf('Entered inside M1');
+    fprintf('Entered inside M1');
     
     samples_picked = 0;
     qs = zeros(num_samples, 4);
@@ -15,10 +15,10 @@ function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radiu
     while samples_picked < num_samples     
         % Src: https://www.mathworks.com/help/matlab/ref/rand.html#buiavoq-9
         
-        q1 = q_min(1) + (q_max(1) - q_min(1))*rand(1,1);
-        q2 = q_min(2) + (q_max(2) - q_min(2))*rand(1,1);
-        q3 = q_min(3) + (q_max(3) - q_min(3))*rand(1,1);
-        q4 = q_min(4) + (q_max(4) - q_min(4))*rand(1,1);         
+        q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
+        q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
+        q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
+        q4 = q_min(4) + (q_max(4) - q_min(4))*rand();         
         
         if strcmp(sampling_strategy, 'gaussian')
             q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
@@ -56,7 +56,7 @@ function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radiu
             q_ddash = [q1_ddash q2_ddash q3_ddash q4_ddash];
         end
         
-        q = [q1 q2 q3 q4];
+        q = [q1 q2 q3 q4]
         
         % q_picked contains the sample which is picked
         % Check if uniform random sampling config is free or not
@@ -85,19 +85,14 @@ function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radiu
             end
         end
         
-%         fprintf('\nTrying to get samples')
-%         q_already_selected
-%         ~all(all(q_already_selected == q)) && all(q >= q_min) && all(q <= q_max)
-% 
-%         if ~all(all(q_already_selected == q)) && all(q >= q_min) && all(q <= q_max)
-%             samples_picked = samples_picked + 1;
-%             qs(samples_picked, :) = [q1 q2 q3 q4];
-%             q_already_selected(samples_picked, :) = q;
-%             fprintf('\nEnded M1');
-%         end
-         
-        samples_picked = samples_picked + 1;
-        qs(samples_picked, :) = [q1 q2 q3 q4];
+        fprintf('\nTrying to get samples')
+
+        if ~all(all(q_already_selected == q)) && all(q >= q_min) && all(q <= q_max)
+            samples_picked = samples_picked + 1;
+            qs(samples_picked, :) = [q1 q2 q3 q4];
+            q_already_selected(samples_picked, :) = q;
+            fprintf('\nEnded M1');
+        end
         
     end
     

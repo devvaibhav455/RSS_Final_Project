@@ -55,8 +55,7 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
 
 %     algo_path = 'prm';
 %     algo_path = 'rrt';
-%     algo_path = 'dijkstra';
-    algo_path = 'rrtstar';
+    algo_path = 'dijkstra';
 
     smooth_path = 1; % 1 : shorten and smooth path using interpolation | 0 don't do path smoothing
 %     algo_smoothing = 'poly';
@@ -69,50 +68,11 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
     
     % ========== Use Dijkstra to find path ==========
     if strcmp(algo_path, 'dijkstra')
-        % Add q_start and q_goal to the samples and calculate new adjacency
-        % matrix in order to find a path between them
-        samples_new = samples;
-        adjacency_new = adjacency;
-        samples_new = [samples_new; q_start; q_goal];
+        [dist, paths] = Dijkstra(adjacency, 1, 2);
         
-        % Starting loop from q_start (2nd last element) till the next element
-        for i = size(samples_new,1)-1:size(samples_new,1) 
-            % Finding the distance of all the points from q_start
-            dist = zeros(size(samples_new,1), 2); %First column contains distance value, 2nd column contains the index of the neighbor for which distance is being calculated
-            for j = 1:size(samples_new,1)
-                %Check for distance of current sample from all other samples
-                if j ~= i
-                    dist(j, 1) = sum(sqrt((samples_new(i,:) - samples_new(j,:)).^2) );
-                    dist(j, 2) = j;
-                end
-            end      
-            dist(i,:) = []; %Deleting the zero entry for distance when i==j (it is still zero because of zeros function)
-            
-            % Finding the minimum num_neighbors + 1 (as it includes 0 distance)
-            % with the currently selected sample as well and their index
-            sorted_dist_and_indexes = sortrows(dist);
-            sorted_dist = sorted_dist_and_indexes(:,1);
-            sorted_dist_indexes = sorted_dist_and_indexes(:,2);
-            for j = 1:length(sorted_dist)
-                %Check if the edge between jth neighbor and current sample (ith) is collision free or not
-    %             disp(['i: ', num2str(i), ' | j: ', num2str(j)]);
-                if ~(check_edge(robot, samples_new(i,:), samples_new(sorted_dist_indexes(j)), link_radius, sphere_centers, sphere_radii,30))
-                    adjacency_new(i,sorted_dist_indexes(j)) = sorted_dist(j);
-                    adjacency_new(sorted_dist_indexes(j),i) = sorted_dist(j);
-                else
-                    adjacency_new(i,sorted_dist_indexes(j)) = 0;
-                    adjacency_new(sorted_dist_indexes(j),i) = 0;
-                end
-            end
-            adjacency_new(i,i) = 0;
-        end 
-
-
-        [dist, path_indexes] = Dijkstra(adjacency_new, size(adjacency_new,1)-1, size(adjacency_new,1));
-        
-        if size(path_indexes,1) > 1
+        if size(paths,1) > 1
             path_found = 1;
-            path = zeros(size(path_indexes,1), 4);
+            path = zeros()
             %Find out the values of qs from indices.
             for i = 1:length(path_indexes)
                 path(i,:) = samples_new(path_indexes(i),:);
@@ -160,7 +120,7 @@ function [samples, adjacency] = ex2_motion(samples, adjacency)
 
     % ========== Use RRT* to find path ==========
     if strcmp(algo_path, 'rrtstar')
-        [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_center, sphere_radius, sampling_strategy);        
+
     end
 
     % ========== Display the number of points in the path by the path finding algorithm ==========

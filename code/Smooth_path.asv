@@ -66,8 +66,7 @@ function smoothed_path = M5(path, algo_smoothing)
     end
 
     if strcmp(algo_smoothing, 'bspline')  
-        % Src: https://www.mathworks.com/help/robotics/ref/bsplinepolytraj.html?s_tid=doc_ta#mw_c3cb56b1-ffe5-4071-a655-68cfc0762775
-        
+        % Src
         % Create waypoints to interpolate with a B-Spline.
         x = 1:size(path,1);
         
@@ -77,11 +76,6 @@ function smoothed_path = M5(path, algo_smoothing)
         q4 = [x; path(:,4)'];
 
         L = length(q1) - 1;
-        
-        if L == 1
-            smoothed_path = path;
-            return
-        end
 
         % Form matrices used to compute interior points of control polygon
         r1 = zeros(L+1, size(q1,1));
@@ -139,7 +133,7 @@ function smoothed_path = M5(path, algo_smoothing)
         legend('Original waypoints', 'Computed control polygon', 'B-spline');
         
         
-        smoothed_path = [q1_smoothed(2,:)' ,q2_smoothed(2,:)', q3_smoothed(2,:)', q4_smoothed(2,:)'];
+        smoothed_path = [q1_smoothed(2,:)' ,q2_smoothed(2,:)', q3_smoothed(2,:)', q4_smoothed(2,:)']
     
     end
 
