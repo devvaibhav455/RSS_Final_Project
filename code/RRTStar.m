@@ -117,7 +117,7 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
 %                 distances(G,1,q_new_index)
 %                 vecnorm(q_new - q_near, 2, 2)
                 if (check_edge(robot, q_near, q_new, link_radius, sphere_centers, sphere_radii) == false) && (distances(G,1,q_new_index) + vecnorm(q_new - q_near, 2, 2) < distances(G,1,q_near_index))
-                    disp('Deleting the edge from tree')
+%                     disp('Deleting the edge from tree')
                     q_parent_index = predecessors(G,q_near_index);
                     % https://www.mathworks.com/help/matlab/ref/graph.rmedge.html
                     G = rmedge(G,q_parent_index, q_near_index);
@@ -138,36 +138,36 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
                     q_goal_index = find(ismember(V,q_goal,'rows')) ;
                     G = addnode(G,1); % Add one node to the graph.
                     G = addedge(G,q_new_index, q_goal_index, vecnorm(q_new - q_goal, 2, 2));
-                    fprintf('\n########### PATH FOUND ##############\n');
+%                     fprintf('\n########### PATH FOUND ##############\n');
                     break;
 %                     E = [E; q_new; q_goal];
                 end
             end
 %             V(:,1)
 %             V(:,4)
-        figure(2);
-        plot3(V(:,1),V(:,2),V(:,4),".")
-        grid on
-        xlabel('q1')
-        ylabel('q2')
-        zlabel('q4')
-        xlim([-3*pi/2 3*pi/2])
-        ylim([-1.5*pi 0.1])
-        zlim([-1.5*pi 0.1])
-
-        txt_start = '\leftarrow START';
-        txt_goal = '\leftarrow GOAL';
-        text(q_start(1),q_start(2),q_start(4),txt_start)
-        text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
-        M(i) = getframe;
-        hold off
+%         figure(2);
+%         plot3(V(:,1),V(:,2),V(:,4),".")
+%         grid on
+%         xlabel('q1')
+%         ylabel('q2')
+%         zlabel('q4')
+%         xlim([-3*pi/2 3*pi/2])
+%         ylim([-1.5*pi 0.1])
+%         zlim([-1.5*pi 0.1])
+% 
+%         txt_start = '\leftarrow START';
+%         txt_goal = '\leftarrow GOAL';
+%         text(q_start(1),q_start(2),q_start(4),txt_start)
+%         text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
+%         M(i) = getframe;
+%         hold off
         end
 %     pause(5)
     end
     
-    figure(3);
-    plot(G)
-    hold off
+%     figure(3);
+%     plot(G)
+%     hold off
 
     
     

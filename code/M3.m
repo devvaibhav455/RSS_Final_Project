@@ -59,8 +59,8 @@ function [path, path_found] = M3(robot, samples, adjacency, q_start, q_goal, lin
     end 
 
     G = graph(adjacency_new);
-    fprintf('Distance between nodes ')
-    G.Edges
+%     fprintf('Distance between nodes ')
+%     G.Edges
 %     f1 = figure('Name','My Graph' );
     % MATLAB does not show node number if the no. of nodes is greater than
     % 100

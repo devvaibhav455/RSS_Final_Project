@@ -14,9 +14,11 @@
 %                 should be q_start, the final row should be q_goal.
 %         path_found -> Boolean denoting whether a path was found
 
-function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_centers, sphere_radii,sampling_strategy,num_samples)
+function [path, path_found] = M4_AStar(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_centers, sphere_radii,sampling_strategy,num_samples, num_neighbors, samples, adjacency)
     % Generate graph using M2 function
-    [samples, adjacency] = M2(robot, q_min, q_max, num_samples, 10, link_radius, sphere_centers, sphere_radii);
+%     [samples, adjacency] = M2(robot, q_min, q_max, num_samples, sampling_strategy, num_neighbors, link_radius, sphere_centers, sphere_radii);
+%     save("samples_adjacency_matrix_new.mat", "samples", "adjacency");
+%     load samples_adjacency_matrix_new.mat;
     k = 3;
     
     % Add start and goal configurations to graph if they are not already there
@@ -57,10 +59,10 @@ function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radi
     end
 %     disp(samples)
     % Find the indices of start and goal configurations in the graph
-    start_idx = find(all(samples == q_start, 2))
-    disp(start_idx)
-    goal_idx = find(all(samples == q_goal, 2))
-    disp(goal_idx)
+    start_idx = find(all(samples == q_start, 2));
+%     disp(start_idx)
+    goal_idx = find(all(samples == q_goal, 2));
+%     disp(goal_idx)
     function h = euclidean_distance(q1, q2)
         h = norm(q1 - q2);
     end
@@ -70,6 +72,7 @@ function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radi
 end
 
 function [path, path_found] = A_star(adj_matrix,samples, start_idx, goal_idx, heuristic_func)
+    tic;
     num_nodes = size(adj_matrix, 1);
     g_scores = inf(1, num_nodes);
     f_scores = inf(1, num_nodes);

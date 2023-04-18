@@ -13,9 +13,11 @@
 
 function smoothed_path = M5(path, algo_smoothing)
     
+    spacing = 0.01;
     if strcmp(algo_smoothing, 'poly')    
         t = 1:size(path, 1);
-        ti = 1:0.4:size(path, 1); % Interpolate at any intervals
+%         ti = 1:0.4:size(path, 1); % Interpolate at any intervals
+        ti = 1:spacing:size(path, 1); % Interpolate at any intervals
         degree = size(path, 1) - 1;
     
         % Interpolate each joint separately using a polynomial of degree 3 can
@@ -29,7 +31,8 @@ function smoothed_path = M5(path, algo_smoothing)
     
     if strcmp(algo_smoothing, 'spline')    
         t = 1:size(path, 1);
-        ti = 1:0.2:size(path, 1); % Interpolate at 0.1 intervals we can tweak this for smoother and smoother path
+%         ti = 1:0.2:size(path, 1); % Interpolate at 0.1 intervals we can tweak this for smoother and smoother path
+        ti = 1:spacing:size(path, 1); % Interpolate at 0.1 intervals we can tweak this for smoother and smoother path
         smoothed_path = interp1(t, path, ti, 'spline');
     end
 
@@ -40,7 +43,7 @@ function smoothed_path = M5(path, algo_smoothing)
         
         i = 0:n;
         coeff = factorial(n)./(factorial(i).*factorial(n-i));
-        sbcp = 0.01; % Spacing between control points
+        sbcp = spacing; % Spacing between control points
         t = 0:sbcp:1;
         
 
@@ -124,7 +127,7 @@ function smoothed_path = M5(path, algo_smoothing)
         cpts_q3 = [q3(:,1) dInterior_q3 q3(:,end)];
         cpts_q4 = [q4(:,1) dInterior_q4 q4(:,end)];
 
-        t = 0:0.01:1;
+        t = 0:spacing:1;
 
         q1_smoothed = bsplinepolytraj(cpts_q1, [0 1], t);
         q2_smoothed = bsplinepolytraj(cpts_q2, [0 1], t);
@@ -145,8 +148,22 @@ function smoothed_path = M5(path, algo_smoothing)
 
     if strcmp(algo_smoothing, 'pchip')    
         t = 1:size(path, 1);
-        ti = 1:0.2:size(path, 1); % Interpolate at 0.1 intervals we can tweak this for smoother and smoother path
+        ti = 1:spacing:size(path, 1); % Interpolate at 0.1 intervals we can tweak this for smoother and smoother path
         smoothed_path = interp1(t, path, ti, 'pchip');
     end
+
+    if strcmp(algo_smoothing, 'linear')    
+        max_velocity = spacing;
+        smoothed_path = [path(1,:)];
+        for i = 2:size(path, 1)
+            vec = path(i,:) - path(i-1,:);
+            num_ticks = ceil(norm(vec) / max_velocity);
+            ticks = linspace(0, 1, num_ticks + 1)';
+            segment = repmat(path(i-1,:), num_ticks, 1) + repmat(ticks(2:end,:), 1, length(path(i,:))) .* repmat(vec, num_ticks, 1);
+            smoothed_path = [smoothed_path; segment];
+        end
+    end
+
+
 
 

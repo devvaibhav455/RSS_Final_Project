@@ -11,46 +11,46 @@ function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radiu
     qs = zeros(num_samples, 4);
     q_already_selected = zeros(num_samples, 4);
 
-    sigma = (q_max - q_min)/6; % Using 1/6th of the range as standard deviation)
+    sigma = 0.75*(q_max - q_min); % Using 1/6th of the range as standard deviation)
     while samples_picked < num_samples     
         % Src: https://www.mathworks.com/help/matlab/ref/rand.html#buiavoq-9
         
-        q1 = q_min(1) + (q_max(1) - q_min(1))*rand(1,1);
-        q2 = q_min(2) + (q_max(2) - q_min(2))*rand(1,1);
-        q3 = q_min(3) + (q_max(3) - q_min(3))*rand(1,1);
-        q4 = q_min(4) + (q_max(4) - q_min(4))*rand(1,1);         
+        q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
+        q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
+        q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
+        q4 = q_min(4) + (q_max(4) - q_min(4))*rand();         
         
         if strcmp(sampling_strategy, 'gaussian')
-            q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
+%             q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
             q1_dash = normrnd(q1,sigma(1)); 
             
-            q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
+%             q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
             q2_dash = normrnd(q2,sigma(2));
             
-            q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
+%             q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
             q3_dash = normrnd(q3,sigma(3));
 
-            q4 = q_min(4) + (q_max(4) - q_min(4))*rand();
+%             q4 = q_min(4) + (q_max(4) - q_min(4))*rand();
             q4_dash = normrnd(q4,sigma(4));
 
             q_dash = [q1_dash q2_dash q3_dash q4_dash];
 
         elseif strcmp(sampling_strategy, 'bridge')
-            q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
+%             q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
             q1_dash = normrnd(q1,sigma(1));
             q1_ddash = (q1 + q1_dash)/2;
             
-            q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
+%             q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
             q2_dash = normrnd(q2,sigma(2));
             q2_ddash = (q2 + q2_dash)/2;
             
-            q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
+%             q3 = q_min(3) + (q_max(3) - q_min(3))*rand();
             q3_dash = normrnd(q3,sigma(3));
             q3_ddash = (q3 + q3_dash)/2;
 
-            q4 = q_min(4) + (q_max(4) - q_min(4))*rand();
+%             q4 = q_min(4) + (q_max(4) - q_min(4))*rand();
             q4_dash = normrnd(q4,sigma(4));
-            q4_ddash = (q3 + q3_dash)/2;
+            q4_ddash = (q4 + q4_dash)/2;
 
             q_dash = [q1_dash q2_dash q3_dash q4_dash];
             q_ddash = [q1_ddash q2_ddash q3_ddash q4_ddash];
@@ -79,25 +79,31 @@ function qs = M1(q_min, q_max, num_samples, sampling_strategy, robot, link_radiu
             is_q_ddash_colliding  = check_collision(robot, q_ddash, link_radius, sphere_centers, sphere_radii); 
 
             if ((is_q_colliding && is_q_dash_colliding) == true) && (is_q_ddash_colliding == false)
-                    q = q_ddash;
+%                 fprintf('\nBridge sample found')    
+                q = q_ddash;
             else
+%                 fprintf('\nBridge condition not matched. Trying next iteration')
                 continue
             end
         end
         
 %         fprintf('\nTrying to get samples')
+%         q
 %         q_already_selected
 %         ~all(all(q_already_selected == q)) && all(q >= q_min) && all(q <= q_max)
-% 
-%         if ~all(all(q_already_selected == q)) && all(q >= q_min) && all(q <= q_max)
-%             samples_picked = samples_picked + 1;
+
+        if ~all(all(q_already_selected == q)) && all(q >= q_min) && all(q <= q_max)
+            samples_picked = samples_picked + 1;
 %             qs(samples_picked, :) = [q1 q2 q3 q4];
-%             q_already_selected(samples_picked, :) = q;
-%             fprintf('\nEnded M1');
-%         end
+            qs(samples_picked, :) = q;
+            q_already_selected(samples_picked, :) = q;
+%             fprintf('\nPicked bridge sample because its unique');
+%             fprintf('\nSamples picked: %d', samples_picked);
+        end
          
-        samples_picked = samples_picked + 1;
-        qs(samples_picked, :) = [q1 q2 q3 q4];
+%         samples_picked = samples_picked + 1;
+%         qs(samples_picked, :) = q;
+%         qs(samples_picked, :) = [q1 q2 q3 q4];
         
     end
     

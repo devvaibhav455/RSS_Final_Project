@@ -46,6 +46,7 @@ function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radi
             q_target = q_goal;
         else
             q_target = M1(q_min, q_max, 1, sampling_strategy, robot, link_radius, sphere_centers, sphere_radii);
+            
         end
 
         % Find the closest node in the tree to the target configuration
@@ -75,21 +76,21 @@ function [path, path_found] = M4(robot, q_min, q_max, q_start, q_goal, link_radi
                 end
             end
         end
-        plot3(V(:,1),V(:,2),V(:,4))
-        grid on
-        xlabel('q1')
-        ylabel('q2')
-        zlabel('q4')
-        xlim([-3*pi/2 3*pi/2])
-        ylim([-1.5*pi 0.1])
-        zlim([-1.5*pi 0.1])
-
-        txt_start = '\leftarrow START';
-        txt_goal = '\leftarrow GOAL';
-        text(q_start(1),q_start(2),q_start(4),txt_start)
-        text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
-        M(i) = getframe;
-        hold on
+%         plot3(V(:,1),V(:,2),V(:,4))
+%         grid on
+%         xlabel('q1')
+%         ylabel('q2')
+%         zlabel('q4')
+%         xlim([-3*pi/2 3*pi/2])
+%         ylim([-1.5*pi 0.1])
+%         zlim([-1.5*pi 0.1])
+% 
+%         txt_start = '\leftarrow START';
+%         txt_goal = '\leftarrow GOAL';
+%         text(q_start(1),q_start(2),q_start(4),txt_start)
+%         text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
+%         M(i) = getframe;
+%         hold on
     end
 
     %Construct matlab tree from the E matrix by using s and t approach.

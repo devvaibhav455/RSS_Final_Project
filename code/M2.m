@@ -36,7 +36,9 @@ function [samples, adjacency] = M2(robot, q_min, q_max, num_samples, sampling_st
         rng shuffle;
         %Check if this random index is already picked or not/ pick a unique
         %sample each time
+%         fprintf('M2 called M1')
         q = M1(q_min, q_max, 1, sampling_strategy, robot, link_radius, sphere_centers, sphere_radii);
+%         fprintf('M2 called M1 end')
 
 %         q1 = q_min(1) + (q_max(1) - q_min(1))*rand();
 %         q2 = q_min(2) + (q_max(2) - q_min(2))*rand();
@@ -54,6 +56,7 @@ function [samples, adjacency] = M2(robot, q_min, q_max, num_samples, sampling_st
         %Add the sampled configuration to vertices in graph if it is collision free
         if ~check_collision(robot, q, link_radius, sphere_centers, sphere_radii) && all(q >= q_min) && all(q <= q_max) && ~all(all(q_in_graph == q))
             samples_picked = samples_picked + 1;
+%             fprintf('\nSamples picked: %d', samples_picked);
             samples(samples_picked, :) = q;
             q_in_graph(samples_picked, :) = q;
         end
@@ -90,4 +93,5 @@ function [samples, adjacency] = M2(robot, q_min, q_max, num_samples, sampling_st
         end 
         adjacency(i,i) = 0;
     end
+    
 end
