@@ -28,6 +28,7 @@ q_goal = [0 -3 0 -3];
 q_min = [-pi/2 -pi 0 -pi];
 q_max = [pi/2 0 0 0];
 
+
 % Radius of each robot link's cylindrical body
 link_radius = 0.03;
 
@@ -58,13 +59,13 @@ hold on;
 
 path_found = 0;
 
-sampling_strategy = 'uniform';
+% sampling_strategy = 'uniform';
 %     sampling_strategy = 'gaussian';
 %     sampling_strategy = 'bridge';
 
-% sampling_strategy_list = ["uniform" "gaussian" "bridge" ];
-sampling_strategy_list = ["bridge"];
-% algo_path_list = ["astar"];
+sampling_strategy_list = ["uniform" "gaussian" "bridge" ];
+% sampling_strategy_list = ["bridge"];
+% algo_path_list = ["rrtstar"];
 
 %     algo_path = 'prm';
 %     algo_path = 'rrt';
@@ -84,8 +85,89 @@ algo_path_list = ["prm" "rrt" "dijkstra" "rrtstar" "astar"];
 %     algo_smoothing = 'pchip'; %Piecewise Cubic Hermite Interpolating Polynomial (PCHIP)
 
 algo_smoothing_list = ["linear" "poly" "spline" "bezier" "bspline" "pchip"];
-num_iterations = 10;
+num_iterations = 1;
 
+tic
+% Generate cspace corresponding to q_grid
+% cspace = gen_config_space(robot, q_min, q_max, link_radius, sphere_centers, sphere_radii);
+toc
+
+% save("cspace", "cspace");
+
+%%
+close all;
+% Generate the configurations corresponding to cspace == 1
+% Find q1, q2, q4 from index of cpsace
+load cspace.mat
+load uniform_sampling_adjacency.mat
+samples_uniform = samples;
+load gaussian_sampling_adjacency.mat
+samples_gaussian = samples;
+load bridge_sampling_adjacency.mat
+samples_bridge = samples;
+
+
+cspace_resolution = 100;
+q1_grid = linspace(q_min(1), q_max(1), cspace_resolution);
+q2_grid = linspace(q_min(2), q_max(2), cspace_resolution);
+q4_grid = linspace(q_min(4), q_max(4), cspace_resolution);
+
+q_from_cpsace = zeros(sum(cspace(:)), 3);
+
+obstacle_found = 0;
+for i = 1:size(cspace,1)
+    %Loop for q2
+    for j = 1:size(cspace,2)
+        for k = 1:size(cspace,3)
+            if cspace(i,j,k) == 1
+                obstacle_found = obstacle_found + 1;
+                q_from_cpsace(obstacle_found,:) = [q1_grid(i) q2_grid(j) q4_grid(k)];
+            end
+        end
+    end
+    fprintf("\ni: %d", i)
+end
+
+       
+
+            
+%Check if the links intersect with all/ any of the obstacles
+
+% Plot the config space points
+figure(5);
+plot3(q_from_cpsace(:,1),q_from_cpsace(:,2),q_from_cpsace(:,3),".")
+grid on
+xlabel('q1')
+ylabel('q2')
+zlabel('q4')
+%     xlim([-3*pi/2 3*pi/2])
+
+
+
+%     ylim([-1.5*pi 0.1])
+%     zlim([-1.5*pi 0.1])
+
+txt_start = '\leftarrow START';
+txt_goal = '\leftarrow GOAL';
+text(q_start(1),q_start(2),q_start(4),txt_start)
+text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
+% 
+hold on
+% plot3(samples_uniform(:,1),samples_uniform(:,2),samples_uniform(:,4),"o")
+hold on
+% plot3(samples_gaussian(:,1),samples_gaussian(:,2),samples_gaussian(:,4),"x")
+hold on
+% plot3(samples_bridge(:,1),samples_bridge(:,2),samples_bridge(:,4),"+")
+xlim("tight")
+ylim("tight")
+zlim("tight")
+% name_opath = sprintf('%s: Original Path', algo_path);
+% name_smoothed_path = sprintf('%s: Smoothed Path', algo_smoothing);
+% legend(name_opath,'Shortened path',name_smoothed_path)
+% hold off
+
+
+%%
 % fprintf(fileID,'sampling_strategy,algo_path,smooth_path,algo_smoothing\n');
 
 fileID = fopen('exp1.txt','w');
@@ -219,6 +301,7 @@ for a = 1:numel(sampling_strategy_list)
                 tic
                 [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link_radius, sphere_center, sphere_radius, sampling_strategy);        
                 runtime_algo_path = toc;
+                pause(50);
 %                 fprintf('\n%s: Time elapsed: %f\n', algo_path, toc)
             end
 

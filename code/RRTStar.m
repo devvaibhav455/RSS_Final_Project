@@ -145,22 +145,25 @@ function [path, path_found] = RRTStar(robot, q_min, q_max, q_start, q_goal, link
             end
 %             V(:,1)
 %             V(:,4)
-%         figure(2);
-%         plot3(V(:,1),V(:,2),V(:,4),".")
-%         grid on
-%         xlabel('q1')
-%         ylabel('q2')
-%         zlabel('q4')
+        figure(2);
+        plot3(V(:,1),V(:,2),V(:,4),".")
+        grid on
+        xlabel('q1')
+        ylabel('q2')
+        zlabel('q4')
+        xlim("tight")
+        ylim("tight")
+        zlim("tight")
 %         xlim([-3*pi/2 3*pi/2])
 %         ylim([-1.5*pi 0.1])
 %         zlim([-1.5*pi 0.1])
-% 
-%         txt_start = '\leftarrow START';
-%         txt_goal = '\leftarrow GOAL';
-%         text(q_start(1),q_start(2),q_start(4),txt_start)
-%         text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
-%         M(i) = getframe;
-%         hold off
+
+        txt_start = '\leftarrow START';
+        txt_goal = '\leftarrow GOAL';
+        text(q_start(1),q_start(2),q_start(4),txt_start)
+        text(q_goal(1),q_goal(2),q_goal(4),txt_goal)
+        M(i) = getframe;
+        hold off
         end
 %     pause(5)
     end

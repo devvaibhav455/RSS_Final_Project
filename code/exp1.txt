@@ -1,5 +1,0 @@
-sampling_strategy: bridge | algo_path: prm
-Runtime_algo_path,Path_Length
-12.988715,3
-10.572419,3
-11.178380,3
